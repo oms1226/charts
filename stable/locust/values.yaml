@@ -2,7 +2,7 @@ Name: locust
 
 image:
   repository: greenbirdit/locust
-  tag: 0.9.0
+  tag: latest
   pullPolicy: IfNotPresent
   pullSecrets: []
 
@@ -41,6 +41,7 @@ extraEnvs: []
 master:
   config:
     target-host: https://api-dev.skt-maap-api.com
+#    log-file: "/locust-tasks/tasks.log"
   resources:
     limits:
       cpu: 100m
