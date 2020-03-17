@@ -8,7 +8,7 @@ image:
 
 service:
   name: master-web
-  type: NodePort
+  type: LoadBalancer
   externalPort: 8089
   internalPort: 8089
   nodePort: 0
@@ -40,7 +40,7 @@ extraEnvs: []
 
 master:
   config:
-    target-host: https://site.example.com
+    target-host: https://api-dev.skt-maap-api.com
   resources:
     limits:
       cpu: 100m
@@ -59,10 +59,10 @@ worker:
   config:
 
     # Optional parameter to use an existing configmap instead of deploying one with the Chart
-    # configmapName: locust-worker-configs
+    configmapName: locust-worker-configs
 
     # all files from specified configmap (or tasks folder) are mounted under `/locust-tasks`
-    locust-script: "/locust-tasks/tasks.py"
+    locust-script: "/locust-tasks/tasks_maap.py"
   replicaCount: 2
   resources:
     limits:
