@@ -1,16 +1,17 @@
+#!/usr/local/bin/python
+#-*- coding: utf-8 -*-
+import sys
+from time import time
+from datetime import date
+import datetime as pydatetime
 from locust import HttpLocust, TaskSet
 from uuid import uuid4
 import json
 import requests
 from datetime import datetime
 import random
+import socket
 
-bearer_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJTS1QiLCJhZ2VuY3lJZCI6InNrdGFnZW5jeSIsInNjb3BlcyI6IlJPTEVTX0FHRU5DWSIsImV4cCI6MTU5OTY0ODM0Mn0.Hpktkgug-sqOE0kv37sHKP39O4ZzCmidnkZpRav-xD4'
-def get_access_token(l):
-    payload = "{\n  \"clientId\": \"%s\",\n  \"clientSecret\": \"%s\",\n  \"grantType\": \"clientCredentials\"\n}" % ("sktagency", "2c112d50d61e47505ea1016e8d2f47e7d12de08746cb4b5b4fc00d9c0469428e")
-    resp = l.client.post("/ag/1.1/token", headers={'Content-Type': "application/json"}, data=payload)
-    print(resp.json())
-    bearer_token = resp.json()['data']['tokenInfo']['accessToken']
 
 # def logout(l):
 #     l.client.post("/logout", {"username":"ellen_key", "password":"education"})
@@ -24,31 +25,6 @@ def get_rand_contact_num():
     return "+%d" % (r)
     # return '+821020953338'
 
-def get_header():
-    return {
-        "Authorization": "Bearer " + bearer_token,
-        "Content-Type": "application/json"
-    }
-
-def send_sms(l):
-    resp = l.client.post('/ag/1.1/message',
-    headers=get_header(),
-    data=json.dumps({
-      'clientMsgId': uuid4().hex,
-      'chatbotId': '18994029',
-      'userContact': '+23000011',
-      'expiryOption': 1,
-      'groupId': 'groupid!!!!!!!!!!!',
-      'header': 0,
-      'footer': '010-6444-0681',
-      'messagebaseId': 'mb_test_sms',
-      'productCode': 'sms',
-      'agencyId': 'skt_reseller_test',
-      'body': {
-          'description': '[oms1226] 안녕하세요? 스트레스 테스트입니다 ' + uuid4().hex
-      },
-    }))
-    print(resp.json())
 
 def send_lms(l):
     l.client.post("/v1/messages/",
@@ -280,22 +256,110 @@ def send_file(l):
         files={'file': open('./test.png', 'rb')},
     )
 
+Envs = {
+    "dev":[
+        {'agency_id': 'sktperf',
+            'secret_key': '2c112d50d61e47505ea1016e8d2f47e7d12de08746cb4b5b4fc00d9c0469428e',
+            'chatbot_id': '15812347',
+            'userContact': '+23000011',
+            'groupId': 'maap_loadtest',
+            'agencyId': 'skt_reseller_test',
+            'messagebaseId.sms': 'mb_test_sms',
+         },
+    ],
+    "stg": [
+        {'agency_id': 'sktstgperf',
+         'secret_key': '68453eba23fb4c98a0a71d462ec14b222c952ee78ae24159abd0becd73af4cb7',
+         'chatbot_id': '99991235',
+         'userContact': '+23000011',
+         'groupId': 'maap_loadtest',
+         'agencyId': 'skt_reseller_test',
+         'messagebaseId.sms': 'mb_test_sms_968',
+         },
+    ],
+}
+
+DEBUG = False
+Curent_Env = None
+bearer_token = None
+def get_access_token(l):
+    payload = "{\n  \"clientId\": \"%s\",\n  \"clientSecret\": \"%s\",\n  \"grantType\": \"clientCredentials\"\n}"\
+              % (Curent_Env['agency_id'],\
+              Curent_Env['secret_key'])
+    resp = l.client.post("/ag/1.1/token", headers={'Content-Type': "application/json"}, data=payload)
+    printf(resp.json())
+    global bearer_token
+    bearer_token = resp.json()['data']['tokenInfo']['accessToken']
+
+
+def getClientMsgId():
+    # return "%s_%s_%s" % (socket.gethostname(), time(), uuid4().hex)
+    # return "%s%s" % (date.today().strftime("%y%m%d"), uuid4().hex)
+    return "%s%s" % (pydatetime.datetime.now().strftime("%H%M%S"), uuid4().hex)
+
+def get_header():
+    return {
+        "Authorization": "Bearer " + bearer_token,
+        "Content-Type": "application/json"
+    }
+
+def send_sms(l):
+    resp = l.client.post('/ag/1.1/message',
+    headers=get_header(),
+    data=json.dumps({
+      'clientMsgId': getClientMsgId(),
+      'chatbotId': Curent_Env['chatbot_id'],
+      'userContact': Curent_Env['userContact'],
+      'expiryOption': 1,
+      'groupId': Curent_Env['groupId'],
+      'header': 0,
+      'footer': '010-6444-0681',
+      'messagebaseId': Curent_Env['messagebaseId.sms'],
+      'productCode': 'sms',
+      'agencyId': Curent_Env['agencyId'],
+      'body': {
+          'description': '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(pydatetime.datetime.now())
+      },
+    }))
+    printf(resp.json())
+
 class UserBehavior(TaskSet):
     tasks = {send_sms: 1, send_lms: 0, send_mms: 0, send_bulk: 0, send_file: 0, sqs_perf_test:0}
 
     def on_start(self):
+        global Curent_Env
+        if 'dev' in self.client.base_url:
+            Curent_Env = random.sample(Envs["dev"], 1)[0]
+        elif 'stg' in self.client.base_url:
+            Curent_Env = random.sample(Envs["stg"], 1)[0]
+
         get_access_token(self)
 
     def on_stop(self):
         pass #logout(self)
 
-
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
     min_wait = 1000
     max_wait = 1000
+    #[2020-03-20 11:55:13,384] locust-1584705092-master-65c7764b5-67w59/ERROR/stderr: No module named 'between'
+    # wait_time = between(5, 15)
+
+def printf(str):
+    if DEBUG:
+        print(str)
 
 if __name__ == '__main__':
     for i in range(0, 10):
         c = get_rand_contact_num()
-        print(c)
+        printf(c)
+
+    while len(sys.argv) > 1:
+        sys.argv.pop(1)
+        pass
+    printf(socket.gethostname())
+    printf(getClientMsgId())
+    printf(time())
+    printf(pydatetime.datetime.now())
+    Curent_Env = random.sample(Envs["dev"], 1)[0]
+    printf(Curent_Env['agency_id'])

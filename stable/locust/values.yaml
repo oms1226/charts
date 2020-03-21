@@ -3,6 +3,8 @@ Name: locust
 image:
   repository: greenbirdit/locust
   tag: latest
+#  repository: oms1226/locust_eks
+#  tag: v0
   pullPolicy: IfNotPresent
   pullSecrets: []
 
@@ -16,7 +18,7 @@ service:
   extraLabels: {}
 
 # extra volumes, volumeMounts and envs for both worker and master pods
-extraVolumes: []
+#extraVolumes: []
 # extraVolumes:
 # - name: mySecretVolume
 #   secret:
@@ -24,11 +26,22 @@ extraVolumes: []
 # - name: myConfigMapVolume
 #   configMap:
 #     name: myConfigMap
-extraVolumeMounts: []
+#extraVolumeMounts: []
 # extraVolumeMounts:
 # - name: mySecretVolume
 #   mountPath: /locust/secrets/mySecretVolume/
-extraEnvs: []
+
+#extraVolumes:
+#  - name: logfile
+#    hostPath:
+#      type: Directory
+#      path: /Users/oms1226/locust-tasks/logfile
+#extraVolumeMounts:
+#  - name: logfile
+#    mountPath: /locust-tasks/logfile
+#    readOnly: false
+#extraEnvs: []
+
 # extraEnvs:
 # - name: HELLO
 #   value: WORLD
@@ -41,7 +54,8 @@ extraEnvs: []
 master:
   config:
     target-host: https://api-dev.skt-maap-api.com
-#    log-file: "/locust-tasks/tasks.log"
+#    target-host: https://api-stg.skt-maap-api.com
+    log-file: "/locust-tasks/logfile/tasks.log"
   resources:
     limits:
       cpu: 100m
@@ -64,7 +78,7 @@ worker:
 
     # all files from specified configmap (or tasks folder) are mounted under `/locust-tasks`
     locust-script: "/locust-tasks/tasks_maap.py"
-  replicaCount: 2
+  replicaCount: 100
   resources:
     limits:
       cpu: 100m
