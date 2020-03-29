@@ -262,7 +262,7 @@ Envs = {
             'secret_key': '2c112d50d61e47505ea1016e8d2f47e7d12de08746cb4b5b4fc00d9c0469428e',
             'chatbot_id': '15812347',
             'userContact': '+23000011',
-            'groupId': 'maap_loadtest',
+            'groupId': 'skt.mlt',
             'agencyId': 'skt_reseller_test',
             'messagebaseId.sms': 'mb_test_sms',
          },
@@ -272,16 +272,18 @@ Envs = {
          'secret_key': '68453eba23fb4c98a0a71d462ec14b222c952ee78ae24159abd0becd73af4cb7',
          'chatbot_id': '99991235',
          'userContact': '+23000011',
-         'groupId': 'maap_loadtest',
+         'groupId': 'skt.mlt',
          'agencyId': 'skt_reseller_test',
          'messagebaseId.sms': 'mb_test_sms_968',
+         'messagebaseId.SS': 'SS000000',
          },
     ],
 }
 
 DEBUG = False
 Curent_Env = None
-bearer_token = None
+# bearer_token = None
+bearer_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJTS1QiLCJhZ2VuY3lJZCI6InNrdHN0Z3BlcmYiLCJzY29wZXMiOiJST0xFU19BR0VOQ1kiLCJleHAiOjE1ODUzNjU0MDN9.9TBI-jxaokUoGcCN27ZkCVwGmTun_-ljl4INqw9zqSw"
 def get_access_token(l):
     payload = "{\n  \"clientId\": \"%s\",\n  \"clientSecret\": \"%s\",\n  \"grantType\": \"clientCredentials\"\n}"\
               % (Curent_Env['agency_id'],\
@@ -323,8 +325,49 @@ def send_sms(l):
     }))
     printf(resp.json())
 
+
+def send_SS(l):
+    resp = l.client.post('/ag/1.1/message',
+    headers=get_header(),
+    data=json.dumps({
+        'clientMsgId': getClientMsgId(),
+        'chatbotId': Curent_Env['chatbot_id'],
+        'userContact': Curent_Env['userContact'],
+        'expiryOption': 1,
+        'groupId': Curent_Env['groupId'],
+        'header': 0,
+        'footer': '010-6444-0681',
+        'messagebaseId': Curent_Env['messagebaseId.SS'],
+        'agencyId': Curent_Env['agencyId'],
+        "body": {
+            "description": '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(pydatetime.datetime.now()),
+        },
+        "buttons": [
+            {
+                "suggestions": [
+                    {
+                        "action": {
+                            "urlAction": {
+                                "openUrl": {
+                                    "url": "https://play.google.com/store/apps/details?id=com.starbucks.co&hl=ko"
+                                }
+                            },
+                            "displayText": "스타벅스 앱",
+                            "postback": {
+                                "data": "set_by_chatbot_open_url"
+                            }
+                        }
+                    }
+                ]
+            }
+        ],
+    }))
+    printf(resp.json())
+
+
 class UserBehavior(TaskSet):
-    tasks = {send_sms: 1, send_lms: 0, send_mms: 0, send_bulk: 0, send_file: 0, sqs_perf_test:0}
+    # tasks = {send_sms: 1, send_lms: 0, send_mms: 0, send_bulk: 0, send_file: 0, sqs_perf_test:0}
+    tasks = {send_SS: 1}
 
     def on_start(self):
         global Curent_Env
@@ -333,7 +376,9 @@ class UserBehavior(TaskSet):
         elif 'stg' in self.client.base_url:
             Curent_Env = random.sample(Envs["stg"], 1)[0]
 
-        get_access_token(self)
+        # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s%s" % (date.today().strftime("%y%m%d"), pydatetime.datetime.now().strftime("%H%M")))
+        Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%y%m%d")))
+        # get_access_token(self)
 
     def on_stop(self):
         pass #logout(self)
