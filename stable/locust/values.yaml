@@ -31,32 +31,18 @@ service:
 # - name: mySecretVolume
 #   mountPath: /locust/secrets/mySecretVolume/
 
-extraVolumes:
-  - name: logfile
-    hostPath:
-      type: Directory
-      path: /root
-      #아래는 host에 해당 디렉토리를 생성해야 된다.
-#      path: /Users/oms1226/locust-tasks/logfile
 extraVolumeMounts:
-  - name: logfile
-    mountPath: /locust-tasks/logfile
-    readOnly: false
-
-#extraEnvs: []
-# extraEnvs:
-# - name: HELLO
-#   value: WORLD
-# - name: MY_SECRET
-#   valueFrom:
-#     secretKeyRef:
-#       name: mySecret
-#       key: mySecretKey
+  - name: persistent-storage
+    mountPath: /efs
+extraVolumes:
+  - name: persistent-storage
+    persistentVolumeClaim:
+      claimName: ebs-claim
 
 master:
   config:
-#    target-host: https://api-dev.skt-maap-api.com
-    target-host: https://api-stg.skt-maap-api.com
+    target-host: https://api-dev.skt-maap-api.com
+#    target-host: https://api-stg.skt-maap-api.com
     log-file: "/locust-tasks/logfile/tasks.log"
   resources:
     limits:

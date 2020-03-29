@@ -1,5 +1,6 @@
 #!/usr/local/bin/python
 #-*- coding: utf-8 -*-
+import os
 import sys
 from time import time
 from datetime import date
@@ -250,26 +251,30 @@ def query_capa(l):
 def send_file(l):
     l.client.post("/v1/file/",
         headers={
-            "Authorization": "Bearer " + bearer_token,
+            "Authorization": "Bearer " + Curent_Env['bearer_token'],
             "Content-Type": "multipart/form-data"
         },
         files={'file': open('./test.png', 'rb')},
     )
 
+ENV_FILENAME='/efs/env.json'
 Envs = {
     "dev":[
         {'agency_id': 'sktperf',
-            'secret_key': '2c112d50d61e47505ea1016e8d2f47e7d12de08746cb4b5b4fc00d9c0469428e',
-            'chatbot_id': '15812347',
-            'userContact': '+23000011',
-            'groupId': 'skt.mlt',
-            'agencyId': 'skt_reseller_test',
-            'messagebaseId.sms': 'mb_test_sms',
+        'secret_key': '2c112d50d61e47505ea1016e8d2f47e7d12de08746cb4b5b4fc00d9c0469428e',
+        'bearer_token': None,
+        'chatbot_id': '15812347',
+        'userContact': '+23000011',
+        'groupId': 'skt.mlt',
+        'agencyId': 'skt_reseller_test',
+        'messagebaseId.sms': 'mb_test_sms',
+        'messagebaseId.SS': 'SS000000',
          },
     ],
     "stg": [
         {'agency_id': 'sktstgperf',
          'secret_key': '68453eba23fb4c98a0a71d462ec14b222c952ee78ae24159abd0becd73af4cb7',
+         'bearer_token': None,
          'chatbot_id': '99991235',
          'userContact': '+23000011',
          'groupId': 'skt.mlt',
@@ -280,18 +285,17 @@ Envs = {
     ],
 }
 
+
 DEBUG = False
 Curent_Env = None
-# bearer_token = None
-bearer_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJTS1QiLCJhZ2VuY3lJZCI6InNrdHN0Z3BlcmYiLCJzY29wZXMiOiJST0xFU19BR0VOQ1kiLCJleHAiOjE1ODUzNjU0MDN9.9TBI-jxaokUoGcCN27ZkCVwGmTun_-ljl4INqw9zqSw"
+
 def get_access_token(l):
     payload = "{\n  \"clientId\": \"%s\",\n  \"clientSecret\": \"%s\",\n  \"grantType\": \"clientCredentials\"\n}"\
               % (Curent_Env['agency_id'],\
               Curent_Env['secret_key'])
     resp = l.client.post("/ag/1.1/token", headers={'Content-Type': "application/json"}, data=payload)
     printf(resp.json())
-    global bearer_token
-    bearer_token = resp.json()['data']['tokenInfo']['accessToken']
+    return resp.json()['data']['tokenInfo']['accessToken']
 
 
 def getClientMsgId():
@@ -301,7 +305,7 @@ def getClientMsgId():
 
 def get_header():
     return {
-        "Authorization": "Bearer " + bearer_token,
+        "Authorization": "Bearer " + Curent_Env['bearer_token'],
         "Content-Type": "application/json"
     }
 
@@ -364,21 +368,47 @@ def send_SS(l):
     }))
     printf(resp.json())
 
+def setting_env(self):
+    reVal = False
+    global Curent_Env
+    try:
+        with open(ENV_FILENAME, "r") as env_json:
+            Curent_Env = json.load(env_json)
+            reVal = True
+            printf(Curent_Env)
+    except OSError as e:
+        printf(e)
 
-class UserBehavior(TaskSet):
-    # tasks = {send_sms: 1, send_lms: 0, send_mms: 0, send_bulk: 0, send_file: 0, sqs_perf_test:0}
-    tasks = {send_SS: 1}
-
-    def on_start(self):
-        global Curent_Env
         if 'dev' in self.client.base_url:
             Curent_Env = random.sample(Envs["dev"], 1)[0]
         elif 'stg' in self.client.base_url:
             Curent_Env = random.sample(Envs["stg"], 1)[0]
 
-        # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s%s" % (date.today().strftime("%y%m%d"), pydatetime.datetime.now().strftime("%H%M")))
-        Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%y%m%d")))
-        # get_access_token(self)
+        Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s%s" % (date.today().strftime("%y%m%d"), pydatetime.datetime.now().strftime("%H%M")))
+        # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%y%m%d")))
+
+        try:
+            Curent_Env['bearer_token'] = get_access_token(self)
+            if os.path.isfile(ENV_FILENAME) == False:
+                with open(ENV_FILENAME, "w") as env_json:
+                    json.dump(Curent_Env, env_json)
+                    reVal = True
+        except:
+            pass
+
+    return reVal
+
+class UserBehavior(TaskSet):
+    # tasks = {send_sms: 1, send_lms: 0, send_mms: 0, send_bulk: 0, send_file: 0, sqs_perf_test:0}
+    tasks = {send_sms: 1}
+    # tasks = {send_SS: 1}
+
+    def on_start(self):
+        tryCount = 1
+        while(setting_env(self) == False):
+            printf("tryCount:" + str(tryCount))
+            tryCount += 1
+            pass
 
     def on_stop(self):
         pass #logout(self)
