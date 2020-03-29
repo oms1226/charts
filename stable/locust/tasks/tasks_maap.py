@@ -1,15 +1,12 @@
 #!/usr/local/bin/python
 #-*- coding: utf-8 -*-
+import datetime
 import os
 import sys
 from time import time
-from datetime import date
-import datetime as pydatetime
 from locust import HttpLocust, TaskSet
 from uuid import uuid4
 import json
-import requests
-from datetime import datetime
 import random
 import socket
 
@@ -257,6 +254,7 @@ def send_file(l):
         files={'file': open('./test.png', 'rb')},
     )
 
+datetime.timezone(datetime.timedelta(hours=9))
 ENV_FILENAME='/efs/env.json'
 Envs = {
     "dev":[
@@ -301,7 +299,7 @@ def get_access_token(l):
 def getClientMsgId():
     # return "%s_%s_%s" % (socket.gethostname(), time(), uuid4().hex)
     # return "%s%s" % (date.today().strftime("%y%m%d"), uuid4().hex)
-    return "%s%s" % (pydatetime.datetime.now().strftime("%H%M%S"), uuid4().hex)
+    return "%s%s" % (datetime.datetime.now().strftime("%H%M%S"), uuid4().hex)
 
 def get_header():
     return {
@@ -324,7 +322,7 @@ def send_sms(l):
       'productCode': 'sms',
       'agencyId': Curent_Env['agencyId'],
       'body': {
-          'description': '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(pydatetime.datetime.now())
+          'description': '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(datetime.datetime.now())
       },
     }))
     printf(resp.json())
@@ -344,7 +342,7 @@ def send_SS(l):
         'messagebaseId': Curent_Env['messagebaseId.SS'],
         'agencyId': Curent_Env['agencyId'],
         "body": {
-            "description": '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(pydatetime.datetime.now()),
+            "description": '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(datetime.datetime.now()),
         },
         "buttons": [
             {
@@ -384,8 +382,8 @@ def setting_env(self):
         elif 'stg' in self.client.base_url:
             Curent_Env = random.sample(Envs["stg"], 1)[0]
 
-        Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s%s" % (date.today().strftime("%y%m%d"), pydatetime.datetime.now().strftime("%H%M")))
-        # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%y%m%d")))
+        Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s%s" % (datetime.date.today().strftime("%Y%m%d"), datetime.datetime.now().strftime("%H%M")))
+        # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%Y%m%d")))
 
         try:
             Curent_Env['bearer_token'] = get_access_token(self)
@@ -411,6 +409,11 @@ class UserBehavior(TaskSet):
             pass
 
     def on_stop(self):
+        if os.path.isfile(ENV_FILENAME):
+            try:
+                os.remove(ENV_FILENAME)
+            except:
+                pass
         pass #logout(self)
 
 class WebsiteUser(HttpLocust):
@@ -435,6 +438,6 @@ if __name__ == '__main__':
     printf(socket.gethostname())
     printf(getClientMsgId())
     printf(time())
-    printf(pydatetime.datetime.now())
+    printf(datetime.datetime.now())
     Curent_Env = random.sample(Envs["dev"], 1)[0]
     printf(Curent_Env['agency_id'])
