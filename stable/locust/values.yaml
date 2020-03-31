@@ -31,18 +31,10 @@ service:
 # - name: mySecretVolume
 #   mountPath: /locust/secrets/mySecretVolume/
 
-extraVolumeMounts:
-  - name: persistent-storage
-    mountPath: /efs
-extraVolumes:
-  - name: persistent-storage
-    persistentVolumeClaim:
-      claimName: ebs-claim
-
 master:
   config:
-    target-host: https://api-dev.skt-maap-api.com
-#    target-host: https://api-stg.skt-maap-api.com
+#    target-host: https://api-dev.skt-maap-api.com
+    target-host: https://api-stg.skt-maap-api.com
     log-file: "/locust-tasks/logfile/tasks.log"
   resources:
     limits:
@@ -58,6 +50,14 @@ master:
   #   operator: "Equal"
   #   value: "api"
   #   effect: "NoSchedule"
+  volumeMounts:
+    - name: persistent-storage
+      mountPath: /efs
+  volumes:
+    - name: persistent-storage
+      persistentVolumeClaim:
+        claimName: ebs-claim
+
 worker:
   config:
 
@@ -81,3 +81,10 @@ worker:
   #   operator: "Equal"
   #   value: "api"
   #   effect: "NoSchedule"
+  volumeMounts:
+    - name: persistent-storage
+      mountPath: /efs
+  volumes:
+    - name: persistent-storage
+      persistentVolumeClaim:
+        claimName: ebs-claim

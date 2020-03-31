@@ -9,6 +9,7 @@ from uuid import uuid4
 import json
 import random
 import socket
+import threading
 
 
 # def logout(l):
@@ -263,7 +264,7 @@ Envs = {
         'bearer_token': None,
         'chatbot_id': '15812347',
         'userContact': '+23000011',
-        'groupId': 'skt.mlt',
+        'groupId': 'mlt',
         'agencyId': 'skt_reseller_test',
         'messagebaseId.sms': 'mb_test_sms',
         'messagebaseId.SS': 'SS000000',
@@ -275,7 +276,7 @@ Envs = {
          'bearer_token': None,
          'chatbot_id': '99991235',
          'userContact': '+23000011',
-         'groupId': 'skt.mlt',
+         'groupId': 'mlt',
          'agencyId': 'skt_reseller_test',
          'messagebaseId.sms': 'mb_test_sms_968',
          'messagebaseId.SS': 'SS000000',
@@ -286,6 +287,7 @@ Envs = {
 
 DEBUG = False
 Curent_Env = None
+lock = threading.Lock()
 
 def get_access_token(l):
     payload = "{\n  \"clientId\": \"%s\",\n  \"clientSecret\": \"%s\",\n  \"grantType\": \"clientCredentials\"\n}"\
@@ -398,23 +400,31 @@ def setting_env(self):
 
 class UserBehavior(TaskSet):
     # tasks = {send_sms: 1, send_lms: 0, send_mms: 0, send_bulk: 0, send_file: 0, sqs_perf_test:0}
-    tasks = {send_sms: 1}
-    # tasks = {send_SS: 1}
+    # tasks = {send_sms: 1}
+    tasks = {send_SS: 1}
 
     def on_start(self):
-        tryCount = 1
-        while(setting_env(self) == False):
-            printf("tryCount:" + str(tryCount))
-            tryCount += 1
-            pass
+        try:
+            lock.acquire()
+            tryCount = 1
+            while(setting_env(self) == False):
+                printf("tryCount:" + str(tryCount))
+                tryCount += 1
+                pass
+        finally:
+            lock.release()
 
     def on_stop(self):
-        if os.path.isfile(ENV_FILENAME):
-            try:
-                os.remove(ENV_FILENAME)
-            except:
-                pass
-        pass #logout(self)
+        try:
+            lock.acquire()
+            if os.path.isfile(ENV_FILENAME):
+                try:
+                    os.remove(ENV_FILENAME)
+                except:
+                    pass
+            pass #logout(self)
+        finally:
+            lock.release()
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
