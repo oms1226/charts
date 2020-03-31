@@ -6,7 +6,8 @@ spec:
   accessModes:
     - ReadWriteOnce
 #    - ReadWriteMany
+#    - ReadOnlyMany
   storageClassName: ebs-sc
   resources:
     requests:
-      storage: 2Gi
+      storage: 1Gi

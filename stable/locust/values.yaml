@@ -30,11 +30,18 @@ service:
 # extraVolumeMounts:
 # - name: mySecretVolume
 #   mountPath: /locust/secrets/mySecretVolume/
+extraVolumeMounts:
+  - name: persistent-storage
+    mountPath: /efs
+extraVolumes:
+  - name: persistent-storage
+    persistentVolumeClaim:
+      claimName: ebs-claim
 
 master:
   config:
-#    target-host: https://api-dev.skt-maap-api.com
-    target-host: https://api-stg.skt-maap-api.com
+    target-host: https://api-dev.skt-maap-api.com
+#    target-host: https://api-stg.skt-maap-api.com
     log-file: "/locust-tasks/logfile/tasks.log"
   resources:
     limits:
@@ -50,13 +57,6 @@ master:
   #   operator: "Equal"
   #   value: "api"
   #   effect: "NoSchedule"
-  volumeMounts:
-    - name: persistent-storage
-      mountPath: /efs
-  volumes:
-    - name: persistent-storage
-      persistentVolumeClaim:
-        claimName: ebs-claim
 
 worker:
   config:
@@ -66,7 +66,7 @@ worker:
 
     # all files from specified configmap (or tasks folder) are mounted under `/locust-tasks`
     locust-script: "/locust-tasks/tasks_maap.py"
-  replicaCount: 100
+  replicaCount: 20
   resources:
     limits:
       cpu: 100m
@@ -81,10 +81,3 @@ worker:
   #   operator: "Equal"
   #   value: "api"
   #   effect: "NoSchedule"
-  volumeMounts:
-    - name: persistent-storage
-      mountPath: /efs
-  volumes:
-    - name: persistent-storage
-      persistentVolumeClaim:
-        claimName: ebs-claim

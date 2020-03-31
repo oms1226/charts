@@ -406,11 +406,13 @@ class UserBehavior(TaskSet):
     def on_start(self):
         try:
             lock.acquire()
-            tryCount = 1
-            while(setting_env(self) == False):
-                printf("tryCount:" + str(tryCount))
-                tryCount += 1
-                pass
+
+            if Curent_Env['bearer_token'] == None:
+                tryCount = 1
+                while(setting_env(self) == False):
+                    printf("tryCount:" + str(tryCount))
+                    tryCount += 1
+                    pass
         finally:
             lock.release()
 
