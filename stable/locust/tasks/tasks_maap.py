@@ -287,6 +287,7 @@ Envs = {
 
 DEBUG = False
 Curent_Env = None
+Token_Share = True
 lock = threading.Lock()
 
 def get_access_token(l):
@@ -378,6 +379,8 @@ def setting_env(self):
         with open(ENV_FILENAME, "r") as env_json:
             Curent_Env = json.load(env_json)
             reVal = True
+            if Token_Share == False:
+                Curent_Env['bearer_token'] = get_access_token(self)
             printf(Curent_Env)
     except OSError as e:
         printf(e)
@@ -398,6 +401,8 @@ def setting_env(self):
                     reVal = True
         except:
             pass
+    except:
+        pass
 
     return reVal
 
