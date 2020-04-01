@@ -36,7 +36,8 @@ extraVolumeMounts:
 extraVolumes:
   - name: persistent-storage
     persistentVolumeClaim:
-      claimName: ebs-claim
+#      claimName: ebs-claim
+      claimName: efs-claim
 
 master:
   config:
@@ -66,7 +67,7 @@ worker:
 
     # all files from specified configmap (or tasks folder) are mounted under `/locust-tasks`
     locust-script: "/locust-tasks/tasks_maap.py"
-  replicaCount: 20
+  replicaCount: 100
   resources:
     limits:
       cpu: 100m

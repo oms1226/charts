@@ -3,7 +3,7 @@
 import datetime
 import os
 import sys
-from time import time
+from time import time, sleep
 from locust import HttpLocust, TaskSet
 from uuid import uuid4
 import json
@@ -371,6 +371,9 @@ def send_SS(l):
 def setting_env(self):
     reVal = False
     global Curent_Env
+    if os.path.isfile(ENV_FILENAME) == False:
+        sleep(random.randrange(0, 5000)/1000)
+
     try:
         with open(ENV_FILENAME, "r") as env_json:
             Curent_Env = json.load(env_json)
@@ -407,7 +410,7 @@ class UserBehavior(TaskSet):
         try:
             lock.acquire()
 
-            if Curent_Env['bearer_token'] == None:
+            if Curent_Env == None:
                 tryCount = 1
                 while(setting_env(self) == False):
                     printf("tryCount:" + str(tryCount))
