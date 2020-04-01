@@ -390,8 +390,10 @@ def setting_env(self):
         elif 'stg' in self.client.base_url:
             Curent_Env = random.sample(Envs["stg"], 1)[0]
 
-        Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s%s" % (datetime.date.today().strftime("%Y%m%d"), datetime.datetime.now().strftime("%H%M")))
-        # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%Y%m%d")))
+        subfix = ("_%s%s" % (datetime.date.today().strftime("%Y%m%d"), datetime.datetime.now().strftime("%H%M")))
+        if len(Curent_Env['groupId']) + len(subfix) <= 20:
+            Curent_Env['groupId'] = Curent_Env['groupId'] + subfix
+            # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%Y%m%d")))
 
         try:
             Curent_Env['bearer_token'] = get_access_token(self)
