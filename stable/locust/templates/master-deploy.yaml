@@ -61,12 +61,12 @@ spec:
 {{ toYaml .Values.extraVolumeMounts | indent 10 }}
 {{- end }}
         livenessProbe:
-          periodSeconds: 30
+          periodSeconds: 120
           httpGet:
             path: /
             port: {{ .Values.service.internalPort }}
         readinessProbe:
-          periodSeconds: 30
+          periodSeconds: 120
           httpGet:
             path: /
             port: {{ .Values.service.internalPort }}

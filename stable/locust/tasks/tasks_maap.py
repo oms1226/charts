@@ -328,7 +328,7 @@ def send_sms(l):
           'description': '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(datetime.datetime.now())
       },
     }))
-    printf(resp.json())
+    printf(resp)
 
 
 def send_SS(l):
@@ -367,7 +367,7 @@ def send_SS(l):
             }
         ],
     }))
-    printf(resp.json())
+    printf(resp)
 
 def setting_env(self):
     reVal = False
@@ -384,6 +384,8 @@ def setting_env(self):
             printf(Curent_Env)
     except OSError as e:
         printf(e)
+        if os.path.isfile(ENV_FILENAME):
+            return reVal
 
         if 'dev' in self.client.base_url:
             Curent_Env = random.sample(Envs["dev"], 1)[0]
@@ -413,11 +415,15 @@ class UserBehavior(TaskSet):
     # tasks = {send_sms: 1}
     tasks = {send_SS: 1}
 
+    if os.path.isfile(ENV_FILENAME):
+        with open(ENV_FILENAME, "r") as env_json:
+            Curent_Env = json.load(env_json)
+
     def on_start(self):
         try:
             lock.acquire()
 
-            if Curent_Env == None:
+            if Curent_Env == None or Curent_Env['bearer_token'] == None:
                 tryCount = 1
                 while(setting_env(self) == False):
                     printf("tryCount:" + str(tryCount))
@@ -440,7 +446,8 @@ class UserBehavior(TaskSet):
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
-    min_wait = 1000
+    #You must define a wait_time method on either the WebsiteUser or UserBehavior class
+    min_wait = 100
     max_wait = 1000
     #[2020-03-20 11:55:13,384] locust-1584705092-master-65c7764b5-67w59/ERROR/stderr: No module named 'between'
     # wait_time = between(5, 15)
