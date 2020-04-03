@@ -255,7 +255,7 @@ def send_file(l):
         files={'file': open('./test.png', 'rb')},
     )
 
-datetime.timezone(datetime.timedelta(hours=9))
+
 ENV_FILENAME='/efs/env.json'
 Envs = {
     "dev":[
@@ -290,6 +290,13 @@ Curent_Env = None
 Token_Share = True
 lock = threading.Lock()
 
+def waiting_before_setup():
+    sleep_time = 1
+    while Curent_Env == None or Curent_Env['bearer_token'] == None:
+        printf('Curent_Env(%s) is not initalized!' % '%s')
+        sleep(sleep_time)
+        sleep_time = sleep_time + 1
+
 def get_access_token(l):
     payload = "{\n  \"clientId\": \"%s\",\n  \"clientSecret\": \"%s\",\n  \"grantType\": \"clientCredentials\"\n}"\
               % (Curent_Env['agency_id'],\
@@ -305,12 +312,16 @@ def getClientMsgId():
     return "%s%s" % (datetime.datetime.now().strftime("%H%M%S"), uuid4().hex)
 
 def get_header():
+
+
     return {
         "Authorization": "Bearer " + Curent_Env['bearer_token'],
         "Content-Type": "application/json"
     }
 
 def send_sms(l):
+    waiting_before_setup
+
     resp = l.client.post('/ag/1.1/message',
     headers=get_header(),
     data=json.dumps({
@@ -332,6 +343,8 @@ def send_sms(l):
 
 
 def send_SS(l):
+    waiting_before_setup
+
     resp = l.client.post('/ag/1.1/message',
     headers=get_header(),
     data=json.dumps({
@@ -372,8 +385,9 @@ def send_SS(l):
 def setting_env(self):
     reVal = False
     global Curent_Env
-    if os.path.isfile(ENV_FILENAME) == False:
-        sleep(random.randrange(0, 5000)/1000)
+
+    # if os.path.isfile(ENV_FILENAME) == False:
+    sleep(random.randrange(0, 5000)/1000)
 
     try:
         with open(ENV_FILENAME, "r") as env_json:
@@ -411,13 +425,15 @@ def setting_env(self):
     return reVal
 
 class UserBehavior(TaskSet):
-    # tasks = {send_sms: 1, send_lms: 0, send_mms: 0, send_bulk: 0, send_file: 0, sqs_perf_test:0}
-    # tasks = {send_sms: 1}
-    tasks = {send_SS: 1}
+    global Curent_Env
 
     if os.path.isfile(ENV_FILENAME):
         with open(ENV_FILENAME, "r") as env_json:
             Curent_Env = json.load(env_json)
+
+    # tasks = {send_sms: 1, send_lms: 0, send_mms: 0, send_bulk: 0, send_file: 0, sqs_perf_test:0}
+    # tasks = {send_sms: 1}
+    tasks = {send_SS: 1}
 
     def on_start(self):
         try:
@@ -447,10 +463,11 @@ class UserBehavior(TaskSet):
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
     #You must define a wait_time method on either the WebsiteUser or UserBehavior class
-    min_wait = 100
-    max_wait = 1000
+    min_wait = 1000
+    max_wait = 10000
     #[2020-03-20 11:55:13,384] locust-1584705092-master-65c7764b5-67w59/ERROR/stderr: No module named 'between'
     # wait_time = between(5, 15)
+    datetime.timezone(datetime.timedelta(hours=9))
 
 def printf(str):
     if DEBUG:
@@ -467,6 +484,7 @@ if __name__ == '__main__':
     printf(socket.gethostname())
     printf(getClientMsgId())
     printf(time())
+    datetime.timezone(datetime.timedelta(hours=9))
     printf(datetime.datetime.now())
     Curent_Env = random.sample(Envs["dev"], 1)[0]
     printf(Curent_Env['agency_id'])

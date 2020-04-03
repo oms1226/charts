@@ -50,7 +50,7 @@ master:
       memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 1024Mi
+      memory: 512Mi
   nodeSelector: {}
     # kops.k8s.io/instancegroup: master
   tolerations: {}
@@ -67,14 +67,14 @@ worker:
 
     # all files from specified configmap (or tasks folder) are mounted under `/locust-tasks`
     locust-script: "/locust-tasks/tasks_maap.py"
-  replicaCount: 100
+  replicaCount: 10
   resources:
     limits:
       cpu: 100m
-      memory: 256Mi
+      memory: 1024Mi
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
   nodeSelector: {}
     # kops.k8s.io/instancegroup: worker
   tolerations: {}
