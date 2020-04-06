@@ -403,7 +403,7 @@ def setting_env(self):
 
         if 'dev' in self.client.base_url:
             Curent_Env = random.sample(Envs["dev"], 1)[0]
-        elif 'stg' in self.client.base_url:
+        elif ('stg' in self.client.base_url) or ('vpce.amazonaws.com'in self.client.base_url) :
             Curent_Env = random.sample(Envs["stg"], 1)[0]
 
         subfix = ("_%s%s" % (datetime.date.today().strftime("%Y%m%d"), datetime.datetime.now().strftime("%H%M")))
