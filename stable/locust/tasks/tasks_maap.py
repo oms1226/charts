@@ -4,7 +4,7 @@ import datetime
 import os
 import sys
 from time import time, sleep
-from locust import HttpLocust, TaskSet
+from locust import HttpLocust, TaskSet, runners
 from uuid import uuid4
 import json
 import random
@@ -263,7 +263,7 @@ Envs = {
         'secret_key': '2c112d50d61e47505ea1016e8d2f47e7d12de08746cb4b5b4fc00d9c0469428e',
         'bearer_token': None,
         'chatbot_id': '15812347',
-        'userContact': '+23000011',
+        'userContact': '+2300000011',
         'groupId': 'mlt',
         'agencyId': 'skt_reseller_test',
         'messagebaseId.sms': 'mb_test_sms',
@@ -275,7 +275,7 @@ Envs = {
          'secret_key': '68453eba23fb4c98a0a71d462ec14b222c952ee78ae24159abd0becd73af4cb7',
          'bearer_token': None,
          'chatbot_id': '99991235',
-         'userContact': '+23000011',
+         'userContact': '+2300000011',
          'groupId': 'mlt',
          'agencyId': 'skt_reseller_test',
          'messagebaseId.sms': 'mb_test_sms_968',
@@ -401,24 +401,29 @@ def setting_env(self):
         if os.path.isfile(ENV_FILENAME):
             return reVal
 
-        if 'dev' in self.client.base_url:
-            Curent_Env = random.sample(Envs["dev"], 1)[0]
-        elif ('stg' in self.client.base_url) or ('vpce.amazonaws.com'in self.client.base_url) :
-            Curent_Env = random.sample(Envs["stg"], 1)[0]
+        if True:#isinstance(runners.locust_runner, runners.MasterLocustRunner):
+            printf("I'm a master")
+            if 'dev' in self.client.base_url:
+                Curent_Env = random.sample(Envs["dev"], 1)[0]
+            elif ('stg' in self.client.base_url) or ('vpce.amazonaws.com'in self.client.base_url) :
+                Curent_Env = random.sample(Envs["stg"], 1)[0]
 
-        subfix = ("_%s%s" % (datetime.date.today().strftime("%Y%m%d"), datetime.datetime.now().strftime("%H%M")))
-        if len(Curent_Env['groupId']) + len(subfix) <= 20:
-            Curent_Env['groupId'] = Curent_Env['groupId'] + subfix
-            # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%Y%m%d")))
+            subfix = ("_%s%s" % (datetime.date.today().strftime("%Y%m%d"), datetime.datetime.now().strftime("%H%M")))
+            if len(Curent_Env['groupId']) + len(subfix) <= 20:
+                Curent_Env['groupId'] = Curent_Env['groupId'] + subfix
+                # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%Y%m%d")))
 
-        try:
-            Curent_Env['bearer_token'] = get_access_token(self)
-            if os.path.isfile(ENV_FILENAME) == False:
-                with open(ENV_FILENAME, "w") as env_json:
-                    json.dump(Curent_Env, env_json)
-                    reVal = True
-        except:
-            pass
+            try:
+                Curent_Env['bearer_token'] = get_access_token(self)
+                if os.path.isfile(ENV_FILENAME) == False:
+                    with open(ENV_FILENAME, "w") as env_json:
+                        json.dump(Curent_Env, env_json)
+                        reVal = True
+            except:
+                pass
+        else:
+            printf("I'm a slave")
+
     except:
         pass
 
@@ -438,10 +443,9 @@ class UserBehavior(TaskSet):
     def on_start(self):
         try:
             lock.acquire()
-
             if Curent_Env == None or Curent_Env['bearer_token'] == None:
                 tryCount = 1
-                while(setting_env(self) == False):
+                while (setting_env(self) == False):
                     printf("tryCount:" + str(tryCount))
                     tryCount += 1
                     pass
