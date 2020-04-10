@@ -255,7 +255,6 @@ def send_file(l):
         files={'file': open('./test.png', 'rb')},
     )
 
-
 ENV_FILENAME='/efs/env.json'
 Envs = {
     "dev":[
@@ -288,6 +287,7 @@ Envs = {
 DEBUG = False
 Curent_Env = None
 Token_Share = True
+KST = datetime.timezone(datetime.timedelta(hours=9))
 lock = threading.Lock()
 
 def waiting_before_setup():
@@ -309,7 +309,7 @@ def get_access_token(l):
 def getClientMsgId():
     # return "%s_%s_%s" % (socket.gethostname(), time(), uuid4().hex)
     # return "%s%s" % (date.today().strftime("%y%m%d"), uuid4().hex)
-    return "%s%s" % (datetime.datetime.now().strftime("%H%M%S"), uuid4().hex)
+    return "%s%s" % (datetime.datetime.now(KST).strftime("%H%M%S"), uuid4().hex)
 
 def get_header():
 
@@ -336,7 +336,7 @@ def send_sms(l):
       'productCode': 'sms',
       'agencyId': Curent_Env['agencyId'],
       'body': {
-          'description': '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(datetime.datetime.now())
+          'description': '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(datetime.datetime.now(KST))
       },
     }))
     printf(resp)
@@ -358,7 +358,7 @@ def send_SS(l):
         'messagebaseId': Curent_Env['messagebaseId.SS'],
         'agencyId': Curent_Env['agencyId'],
         "body": {
-            "description": '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(datetime.datetime.now()),
+            "description": '[oms1226] 안녕하세요? 스트레스 테스트 메시지 발송시간: ' + str(datetime.datetime.now(KST)),
         },
         "buttons": [
             {
@@ -385,7 +385,7 @@ def send_SS(l):
 def setting_env(self):
     reVal = False
     global Curent_Env
-
+    printf("runners.locust_runner:" + str(runners.locust_runner))
     # if os.path.isfile(ENV_FILENAME) == False:
     sleep(random.randrange(0, 5000)/1000)
 
@@ -400,21 +400,22 @@ def setting_env(self):
         printf(e)
         if os.path.isfile(ENV_FILENAME):
             return reVal
-
-        if True:#isinstance(runners.locust_runner, runners.MasterLocustRunner):
-            printf("I'm a master")
+        #SlaveLocustRunner 가 먼저 잡힌다-_-
+        if isinstance(runners.locust_runner, runners.SlaveLocustRunner):
+            printf("I'm a slave")
             if 'dev' in self.client.base_url:
                 Curent_Env = random.sample(Envs["dev"], 1)[0]
             elif ('stg' in self.client.base_url) or ('vpce.amazonaws.com'in self.client.base_url) :
                 Curent_Env = random.sample(Envs["stg"], 1)[0]
 
-            subfix = ("_%s%s" % (datetime.date.today().strftime("%Y%m%d"), datetime.datetime.now().strftime("%H%M")))
+            subfix = ("_%s%s" % (datetime.date.today().strftime("%Y%m%d"), datetime.datetime.now(KST).strftime("%H%M")))
             if len(Curent_Env['groupId']) + len(subfix) <= 20:
                 Curent_Env['groupId'] = Curent_Env['groupId'] + subfix
                 # Curent_Env['groupId'] = Curent_Env['groupId'] + ("_%s" % (date.today().strftime("%Y%m%d")))
 
             try:
                 Curent_Env['bearer_token'] = get_access_token(self)
+                Curent_Env['runners.locust_runner'] = str(runners.locust_runner)
                 if os.path.isfile(ENV_FILENAME) == False:
                     with open(ENV_FILENAME, "w") as env_json:
                         json.dump(Curent_Env, env_json)
@@ -422,7 +423,7 @@ def setting_env(self):
             except:
                 pass
         else:
-            printf("I'm a slave")
+            printf("I'm a master")
 
     except:
         pass
@@ -471,7 +472,8 @@ class WebsiteUser(HttpLocust):
     max_wait = 10000
     #[2020-03-20 11:55:13,384] locust-1584705092-master-65c7764b5-67w59/ERROR/stderr: No module named 'between'
     # wait_time = between(5, 15)
-    datetime.timezone(datetime.timedelta(hours=9))
+
+
 
 def printf(str):
     if DEBUG:
@@ -488,7 +490,6 @@ if __name__ == '__main__':
     printf(socket.gethostname())
     printf(getClientMsgId())
     printf(time())
-    datetime.timezone(datetime.timedelta(hours=9))
-    printf(datetime.datetime.now())
+    printf(datetime.datetime.now(KST))
     Curent_Env = random.sample(Envs["dev"], 1)[0]
     printf(Curent_Env['agency_id'])
