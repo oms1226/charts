@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 import datetime
 import os
+import string
 import sys
 from time import time, sleep
 from locust import HttpLocust, TaskSet, runners
@@ -259,14 +260,15 @@ ENV_FILENAME='/efs/env.json'
 Envs = {
     "dev":[
         {'agency_id': 'sktperf',
-        'secret_key': '2c112d50d61e47505ea1016e8d2f47e7d12de08746cb4b5b4fc00d9c0469428e',
-        'bearer_token': None,
-        'chatbot_id': '15812347',
-        'userContact': '+2300000011',
-        'groupId': 'mlt',
-        'agencyId': 'skt_reseller_test',
-        'messagebaseId.sms': 'mb_test_sms',
-        'messagebaseId.SS': 'SS000000',
+         'secret_key': '2c112d50d61e47505ea1016e8d2f47e7d12de08746cb4b5b4fc00d9c0469428e',
+         'bearer_token': None,
+         'chatbot_id': '15812347',
+         'userContact': 'sandbox',#+2300000011
+         'groupId': 'mlt',
+         'agencyId': 'skt_reseller_test',
+         'messagebaseId.sms': 'mb_test_sms',
+         'messagebaseId.SS': 'SS000000',
+         'expiryOption': 2,
          },
     ],
     "stg": [
@@ -274,11 +276,12 @@ Envs = {
          'secret_key': '68453eba23fb4c98a0a71d462ec14b222c952ee78ae24159abd0becd73af4cb7',
          'bearer_token': None,
          'chatbot_id': '99991235',
-         'userContact': '+2300000011',
+         'userContact': 'samsung',#'+2300000011'
          'groupId': 'mlt',
          'agencyId': 'skt_reseller_test',
          'messagebaseId.sms': 'mb_test_sms_968',
          'messagebaseId.SS': 'SS000000',
+         'expiryOption': 2,
          },
     ],
 }
@@ -312,23 +315,39 @@ def getClientMsgId():
     return "%s%s" % (datetime.datetime.now(KST).strftime("%H%M%S"), uuid4().hex)
 
 def get_header():
-
-
     return {
         "Authorization": "Bearer " + Curent_Env['bearer_token'],
         "Content-Type": "application/json"
     }
 
+def getUserContact(type):
+    reVal = type
+    if 'sandbox' in type:
+        reVal = '+2300000011'
+    elif 'samsung' in type:
+        """
+        +821700000000 ~ +821700999999
+        +821701000000 ~ +821701999999
+        """
+        length = 6
+        string_pool = string.digits
+        result = random.choice('01')
+        for i in range(length) : # 랜덤한 하나의 숫자를 뽑아서, 문자열 결합을 한다.
+            result += random.choice(string_pool)
+        reVal = '+82170' + result
+
+    return reVal
+
 def send_sms(l):
-    waiting_before_setup
+    waiting_before_setup()
 
     resp = l.client.post('/ag/1.1/message',
     headers=get_header(),
     data=json.dumps({
       'clientMsgId': getClientMsgId(),
       'chatbotId': Curent_Env['chatbot_id'],
-      'userContact': Curent_Env['userContact'],
-      'expiryOption': 1,
+      'userContact': getUserContact(Curent_Env['userContact']),
+      'expiryOption': Curent_Env['expiryOption'],
       'groupId': Curent_Env['groupId'],
       'header': 0,
       'footer': '010-6444-0681',
@@ -343,15 +362,15 @@ def send_sms(l):
 
 
 def send_SS(l):
-    waiting_before_setup
+    waiting_before_setup()
 
     resp = l.client.post('/ag/1.1/message',
     headers=get_header(),
     data=json.dumps({
         'clientMsgId': getClientMsgId(),
         'chatbotId': Curent_Env['chatbot_id'],
-        'userContact': Curent_Env['userContact'],
-        'expiryOption': 1,
+        'userContact': getUserContact(Curent_Env['userContact']),
+        'expiryOption': Curent_Env['expiryOption'],
         'groupId': Curent_Env['groupId'],
         'header': 0,
         'footer': '010-6444-0681',
@@ -491,5 +510,9 @@ if __name__ == '__main__':
     printf(getClientMsgId())
     printf(time())
     printf(datetime.datetime.now(KST))
-    Curent_Env = random.sample(Envs["dev"], 1)[0]
+    Curent_Env = random.sample(Envs["stg"], 1)[0]
     printf(Curent_Env['agency_id'])
+    printf(getUserContact(Curent_Env['userContact']))
+    printf(getUserContact('+2300000'))
+    printf(getUserContact('sandbox'))
+    printf(getUserContact('samsung'))

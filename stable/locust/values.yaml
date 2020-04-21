@@ -42,8 +42,8 @@ extraVolumes:
 master:
   config:
 #    target-host: https://api-dev.skt-maap-api.com
-#    target-host: https://api-stg.skt-maap-api.com
-    target-host: http://vpce-0191617aacac59765-8564zunj.vpce-svc-0ea34f30962753e82.ap-northeast-2.vpce.amazonaws.com
+    target-host: https://api-stg.skt-maap-api.com
+#    target-host: http://vpce-0191617aacac59765-8564zunj.vpce-svc-0ea34f30962753e82.ap-northeast-2.vpce.amazonaws.com
 #    log-file: "/locust-tasks/logfile/tasks.log"
 #    log-file: "/locust-tasks/tasks_maap.log"
 #    log-file: "/efs/tasks_maap.log"
@@ -70,7 +70,7 @@ worker:
 
     # all files from specified configmap (or tasks folder) are mounted under `/locust-tasks`
     locust-script: "/locust-tasks/tasks_maap.py"
-  replicaCount: 100
+  replicaCount: 10
   resources:
     limits:
       cpu: 100m
