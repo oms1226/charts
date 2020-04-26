@@ -276,7 +276,7 @@ Envs = {
          'secret_key': '68453eba23fb4c98a0a71d462ec14b222c952ee78ae24159abd0becd73af4cb7',
          'bearer_token': None,
          'chatbot_id': '99991235',
-         'userContact': 'samsung',#'+2300000011'
+         'userContact': 'samsung',#samsung's sandbox
          'groupId': 'mlt',
          'agencyId': 'skt_reseller_test',
          'messagebaseId.sms': 'mb_test_sms_968',
@@ -285,6 +285,11 @@ Envs = {
          },
     ],
 }
+"""
+삼성 sandbox로 테스트 시에는 sktstgperf 의 webhook 주소를
+기존 : http://skt-dev-maap-gw-sandbox-ext-alb-1245530363.ap-northeast-2.elb.amazonaws.com/agencies/sktstgperf
+변경 : https://58wta0euv9.execute-api.ap-northeast-2.amazonaws.com/default/dummy_api
+"""
 
 
 DEBUG = False
