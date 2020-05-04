@@ -268,7 +268,7 @@ Envs = {
          'agencyId': 'skt_reseller_test',
          'messagebaseId.sms': 'mb_test_sms',
          'messagebaseId.SS': 'SS000000',
-         'expiryOption': 2,
+         'expiryOption': 1,
          },
     ],
     "stg": [
@@ -281,7 +281,7 @@ Envs = {
          'agencyId': 'skt_reseller_test',
          'messagebaseId.sms': 'mb_test_sms_968',
          'messagebaseId.SS': 'SS000000',
-         'expiryOption': 2,
+         'expiryOption': 1,
          },
     ],
 }
