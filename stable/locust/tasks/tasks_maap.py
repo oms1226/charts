@@ -268,7 +268,7 @@ Envs = {
          'agencyId': 'skt_reseller_test',
          'messagebaseId.sms': 'mb_test_sms',
          'messagebaseId.SS': 'SS000000',
-         'expiryOption': 1,
+         'expiryOption': 2,
          },
     ],
     "stg": [
@@ -281,7 +281,7 @@ Envs = {
          'agencyId': 'skt_reseller_test',
          'messagebaseId.sms': 'mb_test_sms_968',
          'messagebaseId.SS': 'SS000000',
-         'expiryOption': 1,
+         'expiryOption': 2,
          },
     ],
 }
@@ -425,7 +425,7 @@ def setting_env(self):
         if os.path.isfile(ENV_FILENAME):
             return reVal
         #SlaveLocustRunner 가 먼저 잡힌다-_-
-        if isinstance(runners.locust_runner, runners.SlaveLocustRunner):
+        if isinstance(runners.locust_runner, runners.LocalLocustRunner) or isinstance(runners.locust_runner, runners.SlaveLocustRunner):
             printf("I'm a slave")
             if 'dev' in self.client.base_url:
                 Curent_Env = random.sample(Envs["dev"], 1)[0]
@@ -495,7 +495,7 @@ class WebsiteUser(HttpLocust):
     min_wait = 1000
     max_wait = 10000
     #[2020-03-20 11:55:13,384] locust-1584705092-master-65c7764b5-67w59/ERROR/stderr: No module named 'between'
-    # wait_time = between(5, 15)
+    # wait_time = locust.between(1, 10)
 
 
 
