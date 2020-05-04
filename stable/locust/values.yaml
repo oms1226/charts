@@ -2,8 +2,9 @@ Name: locust
 
 image:
   repository: greenbirdit/locust
-  tag: latest
-#  repository: oms1226/locust_eks
+#  tag: latest
+  tag: 0.13.2
+  #  repository: oms1226/locust_eks
 #  tag: v0
   pullPolicy: IfNotPresent
   pullSecrets: []
