@@ -35,3 +35,5 @@ Session.vim
 **/charts/*.tgz
 
 .history
+stable/locust/2048-ingress.yaml
+stable/locust/eks-admin-service-account.yaml
